@@ -24,7 +24,7 @@ namespace Anamnesis.Views
 
 		private async Task Load()
 		{
-			string url = "https://raw.githubusercontent.com/wiki/imchillin/Anamnesis/WidgetHelpHome.md";
+			string url = "https://raw.fastgit.org/wiki/imchillin/Anamnesis/WidgetHelpHome.md";
 
 			WebClient client = new WebClient();
 			string markdown = await client.DownloadStringTaskAsync(url);

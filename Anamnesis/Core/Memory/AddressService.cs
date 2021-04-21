@@ -10,7 +10,7 @@ namespace Anamnesis.Core.Memory
 	using System.Threading.Tasks;
 	using Anamnesis.Memory;
 
-	#pragma warning disable SA1027, SA1025
+#pragma warning disable SA1027, SA1025
 	public class AddressService : ServiceBase<AddressService>
 	{
 		private static IntPtr weather;
@@ -39,10 +39,8 @@ namespace Anamnesis.Core.Memory
 		public static IntPtr GPose { get; private set; }
 		public static IntPtr TimeStop { get; private set; }
 
-		public static IntPtr Camera
-		{
-			get
-			{
+		public static IntPtr Camera {
+			get {
 				IntPtr address = MemoryService.ReadPtr(camera);
 
 				if (address == IntPtr.Zero)
@@ -50,16 +48,13 @@ namespace Anamnesis.Core.Memory
 
 				return address;
 			}
-			set
-			{
+			set {
 				camera = value;
 			}
 		}
 
-		public static IntPtr Time
-		{
-			get
-			{
+		public static IntPtr Time {
+			get {
 				IntPtr address = MemoryService.ReadPtr(time);
 
 				if (address == IntPtr.Zero)
@@ -69,16 +64,13 @@ namespace Anamnesis.Core.Memory
 				address += 0x1608;
 				return address;
 			}
-			set
-			{
+			set {
 				time = value;
 			}
 		}
 
-		public static IntPtr Weather
-		{
-			get
-			{
+		public static IntPtr Weather {
+			get {
 				IntPtr address = MemoryService.ReadPtr(weather);
 
 				if (address == IntPtr.Zero)
@@ -88,16 +80,13 @@ namespace Anamnesis.Core.Memory
 				address += 0x20;
 				return address;
 			}
-			private set
-			{
+			private set {
 				weather = value;
 			}
 		}
 
-		public static IntPtr GPoseWeather
-		{
-			get
-			{
+		public static IntPtr GPoseWeather {
+			get {
 				IntPtr address = MemoryService.ReadPtr(GPoseFilters);
 
 				if (address == IntPtr.Zero)
@@ -109,10 +98,8 @@ namespace Anamnesis.Core.Memory
 			}
 		}
 
-		public static IntPtr GPoseCamera
-		{
-			get
-			{
+		public static IntPtr GPoseCamera {
+			get {
 				IntPtr address = MemoryService.ReadPtr(GPose);
 
 				if (address == IntPtr.Zero)
@@ -124,8 +111,7 @@ namespace Anamnesis.Core.Memory
 			}
 		}
 
-		public static async Task Scan()
-		{
+		public static async Task Scan() {
 			if (MemoryService.Process == null)
 				return;
 
@@ -154,60 +140,50 @@ namespace Anamnesis.Core.Memory
 			tasks.Add(GetAddressFromSignature("8B 1D ?? ?? ?? ?? 0F 45 D8 39 1D", 2, (p) => { Territory = p; }));
 			tasks.Add(GetAddressFromTextSignature("48 89 ?? 08 16 00 00 48 69", (p) => { TimeStop = p; }));
 
-			tasks.Add(GetAddressFromTextSignature("0F 29 48 10 41 0F 28 44 24 20 0F 29 40 20 48 8B 46", (p) =>
-			{
+			tasks.Add(GetAddressFromSignature("48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 0F B6 F8 48 8B CB", 0, (p) => { Weather = p + 8; }));
+			tasks.Add(GetAddressFromSignature("48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? EB ?? 45 84 E4", 3, (p) => { GPoseActorTable = p + 0x14A0; }));
+			GPoseTargetManager = GPoseActorTable;
+			tasks.Add(GetAddressFromSignature("48 8B 3D ?? ?? ?? ?? BA ?? ?? ?? ?? 48 8D 8F", 0, (p) => { GPoseFilters = p; }));
+			tasks.Add(GetAddressFromSignature("48 8B 15 ?? ?? ?? ?? 48 85 FF 0F 84", 0, (p) => { GposeCheck = p; }));
+			tasks.Add(GetAddressFromSignature("48 8D 05 ?? ?? ?? ?? 8B 0C 88 48 8B 02 83 F9 ?? B2", 0, (p) => { GposeCheck2 = p; }));
+			tasks.Add(GetAddressFromSignature("48 39 15 ?? ?? ?? ?? 75 ?? 48 8B 0D", 0, (p) => { GPose = p + 0x20; }));
+
+			tasks.Add(GetAddressFromTextSignature("0F 29 48 10 41 0F 28 44 24 20 0F 29 40 20 48 8B 46", (p) => {
 				SkeletonFreezePhysics = p;  // PhysicsAddress
 				SkeletonFreezePhysics2 = p - 0x9;   // SkeletonAddress2
 				SkeletonFreezePhysics3 = p + 0xA;   // SkeletonAddress3
 			}));
-
-			// TODO: replace these manual CMTool offsets with signatures
-			IntPtr baseAddress = MemoryService.Process.MainModule.BaseAddress;
-
-			Weather = baseAddress + 0x1D6D348;	// WeaptherOffset
-			GPoseActorTable = baseAddress + 0x1DB9500;	// GPoseEntityOffset
-			GPoseTargetManager = baseAddress + 0x1DB9500;	// GPoseEntityOffset
-			GPoseFilters = baseAddress + 0x1D95B58;
-			GposeCheck = baseAddress + 0x1DBBD00;
-			GposeCheck2 = baseAddress + 0x1DBBCE0;
-			GPose = baseAddress + 0x1DB8120;
 
 			await Task.WhenAll(tasks.ToArray());
 
 			Log.Information($"Took {sw.ElapsedMilliseconds}ms to scan for {tasks.Count} addresses");
 		}
 
-		private static Task GetAddressFromSignature(string signature, int offset, Action<IntPtr> callback)
-		{
+		private static Task GetAddressFromSignature(string signature, int offset, Action<IntPtr> callback) {
 			if (MemoryService.Scanner == null)
 				throw new Exception("No memory scanner");
 
-			return Task.Run(() =>
-			{
+			return Task.Run(() => {
 				IntPtr ptr = MemoryService.Scanner.GetStaticAddressFromSig(signature, offset);
 				callback.Invoke(ptr);
 			});
 		}
 
-		private static Task GetAddressFromTextSignature(string signature, Action<IntPtr> callback)
-		{
+		private static Task GetAddressFromTextSignature(string signature, Action<IntPtr> callback) {
 			if (MemoryService.Scanner == null)
 				throw new Exception("No memory scanner");
 
-			return Task.Run(() =>
-			{
+			return Task.Run(() => {
 				IntPtr ptr = MemoryService.Scanner.ScanText(signature);
 				callback.Invoke(ptr);
 			});
 		}
 
-		private static Task GetBaseAddressFromSignature(string signature, int skip, bool moduleBase, Action<IntPtr> callback)
-		{
+		private static Task GetBaseAddressFromSignature(string signature, int skip, bool moduleBase, Action<IntPtr> callback) {
 			if (MemoryService.Scanner == null)
 				throw new Exception("No memory scanner");
 
-			return Task.Run(() =>
-			{
+			return Task.Run(() => {
 				if (MemoryService.Process?.MainModule == null)
 					return;
 
@@ -216,12 +192,10 @@ namespace Anamnesis.Core.Memory
 				ptr += skip;
 				int offset = MemoryService.Read<int>(ptr);
 
-				if (moduleBase)
-				{
+				if (moduleBase) {
 					ptr = MemoryService.Process.MainModule.BaseAddress + offset;
 				}
-				else
-				{
+				else {
 					ptr += offset + 4;
 				}
 

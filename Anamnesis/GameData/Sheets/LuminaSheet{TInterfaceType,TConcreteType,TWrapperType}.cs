@@ -27,7 +27,7 @@ namespace Anamnesis.GameData.Sheets
 		public LuminaSheet(LuminaData lumina)
 		{
 			this.lumina = lumina;
-			this.excel = lumina.GetExcelSheet<TConcreteType>();
+			this.excel = lumina.GetExcelSheet<TConcreteType>(Lumina.Data.Language.ChineseSimplified);
 		}
 
 		private IEnumerable<TInterfaceType> All

@@ -1,4 +1,4 @@
-// � Anamnesis.
+﻿// © Anamnesis.
 // Developed by W and A Walsh.
 // Licensed under the MIT license.
 
