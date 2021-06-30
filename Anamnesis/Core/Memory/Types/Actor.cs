@@ -7,6 +7,7 @@ namespace Anamnesis.Memory
 	using System.Collections.Generic;
 	using System.Reflection;
 	using System.Runtime.InteropServices;
+	using System.Text;
 	using System.Threading.Tasks;
 	using Anamnesis.Character;
 	using Anamnesis.Character.Utilities;
@@ -24,10 +25,11 @@ namespace Anamnesis.Memory
 	{
 		public const int ObjectKindOffset = 0x008c;
 		public const int RenderModeOffset = 0x0104;
+		public const int TransparencyOffset = 0x1808;
 
 		[FieldOffset(0x0030)]
-		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 30)]
-		public string Name;
+		[MarshalAs(UnmanagedType.ByValArray, SizeConst = 30)]
+		public byte[] NameBytes;
 
 		[FieldOffset(0x0080)] public int DataId;
 		[FieldOffset(ObjectKindOffset)] public ActorTypes ObjectKind;
@@ -38,12 +40,36 @@ namespace Anamnesis.Memory
 		[FieldOffset(RenderModeOffset)] public RenderModes RenderMode;
 		[FieldOffset(0x01B4)] public int ModelType;
 		[FieldOffset(0x01E2)] public byte ClassJob;
-		[FieldOffset(0x07C4)] [MarshalAs(UnmanagedType.I1)]public bool IsAnimating;
+		[FieldOffset(0x07C4)] [MarshalAs(UnmanagedType.I1)] public bool IsAnimating;
 		[FieldOffset(0x0F08)] public Weapon MainHand;
 		[FieldOffset(0x0F70)] public Weapon OffHand;
 		[FieldOffset(0x1040)] public Equipment Equipment;
-		[FieldOffset(0x182C)] public float Transparency;
-		[FieldOffset(0x1898)] public Appearance Customize;
+		[FieldOffset(TransparencyOffset)] public float Transparency;
+		[FieldOffset(0x1878)] public Appearance Customize;
+
+		public string Name
+        {
+			get
+            {
+				int i;
+				for (i = 0; i < this.NameBytes.Length; i++)
+                {
+					if (this.NameBytes[i] == 0)
+						break;
+				}
+
+				return Encoding.UTF8.GetString(this.NameBytes, 0, i);
+			}
+
+			set
+            {
+				byte[] bytes = Encoding.UTF8.GetBytes(value);
+				if (bytes.Length >= 30)
+					throw new Exception($"{value} too long");
+				else
+					this.NameBytes = bytes;
+			}
+		}
 
 		public string Id => this.Name + this.DataId;
 	}
@@ -64,7 +90,7 @@ namespace Anamnesis.Memory
 		{
 		}
 
-		[ModelField] public string Name { get; set; } = string.Empty;
+		public string Name { get; set; } = string.Empty;
 		[ModelField] public int DataId { get; set; }
 		[ModelField][Refresh] public ActorTypes ObjectKind { get; set; }
 		[ModelField] public byte SubKind { get; set; }

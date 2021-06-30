@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
@@ -126,7 +126,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Lumina" Version="3.3.0" />
-		<PackageReference Include="Lumina.Excel" Version="5.50.0" />
+		<PackageReference Include="Lumina.Excel" Version="5.40.3" />
 		<PackageReference Include="PropertyChanged.Fody" Version="3.3.1">
 			<PrivateAssets>All</PrivateAssets>
 			<IncludeAssets></IncludeAssets>
@@ -357,6 +357,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <None Update="Anamnesis.exe.config">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	  <None Update="Download DotNET Desktop Runtime.URL">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
